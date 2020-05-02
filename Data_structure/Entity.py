@@ -19,9 +19,9 @@ class entity:
 
 
 class attribute :
-    def __init__(self,name,type):
+    def __init__(self,name,attr_type):
         self.name = name # name of attribute image processing part give to each attribute  a name like "attribute-1-1" then Gui Module ask user to change name to whatever he/she likes
-        self.type = type # type would be a primary key or non prime
+        self.type = attr_type # type would be a primary key or non prime
 
 class relation :
     def __init__(self,name,id1,id2,p_ratio1,p_ratio2,p_type1,p_type2):
@@ -29,7 +29,7 @@ class relation :
         self.id = id1^id2           # unique id of the relation
         self.p_type1 = p_type1       #type  of participation of the first entity could be partial or full
         self.p_type2 = p_type2       #type of participation of the second entity could be partial or full
-        self.p_ratio1  = p_ratio2    #ratio of participation of first entity could be one or many
+        self.p_ratio1  = p_ratio1    #ratio of participation of first entity could be one or many
         self.p_ratio2  = p_ratio2    #ratio of participation of second  entity could be one or many
 
     def getTargetEntity(self,srcEntity):

@@ -17,11 +17,21 @@ class entity:
     def getID(self):
         return self.id
 
+    def getPrim_attrib(self):
+        for attrib in self.attr_list:
+            if attrib.type == "primary" or attrib.type == "prime":
+                return attrib
+
 
 class attribute :
-    def __init__(self,name,attr_type):
+    def __init__(self,name,attr_type,comp=False):
         self.name = name # name of attribute image processing part give to each attribute  a name like "attribute-1-1" then Gui Module ask user to change name to whatever he/she likes
         self.type = attr_type # type would be a primary key or non prime
+        self.isComposite = comp
+        self.attrib_childs = []
+
+    def add_child(self,attrib):
+        self.attrib_childs.append(attrib)
 
 class relation :
     def __init__(self,name,id1,id2,p_ratio1,p_ratio2,p_type1,p_type2):
@@ -31,9 +41,13 @@ class relation :
         self.p_type2 = p_type2       #type of participation of the second entity could be partial or full
         self.p_ratio1  = p_ratio1    #ratio of participation of first entity could be one or many
         self.p_ratio2  = p_ratio2    #ratio of participation of second  entity could be one or many
+        self.attrib_list = []
 
     def getTargetEntity(self,srcEntity):
         return self.id ^ srcEntity.getID()
+
+    def add_attrib(self,attrib):
+        self.attrib_list.append(attrib)
 
 def getUniqueID():
     return uuid.uuid1().int 

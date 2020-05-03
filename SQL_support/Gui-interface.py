@@ -64,7 +64,7 @@ def main():# [FOR TESTING ONLY]
     EmployeeEntity.add_attr(Ename)
     EmployeeEntity.add_attr(SSID)
 
-    dName = En.attribute("Dname","non-prime")
+    dName = En.attribute("Dname","prime")
     dlocation = En.attribute("location","non-prime")
     manger = En.attribute("manager","non-prime")
 

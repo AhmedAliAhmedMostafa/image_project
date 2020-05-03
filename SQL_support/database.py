@@ -96,7 +96,7 @@ class db_interpreter:
             self.cursor.execute(sql)
 
     def __MakeOneToMany(self, parameter_list):
-        if parameter_list[1].p_ratio1 == "one":
+        if parameter_list[1].p_ratio1 == "many":
             self.__addForignKey(parameter_list)
         else:
             parameter_list[0],parameter_list[2] = parameter_list[2],parameter_list[0]

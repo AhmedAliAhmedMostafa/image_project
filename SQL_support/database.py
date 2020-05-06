@@ -42,6 +42,7 @@ class db_interpreter:
             self.queries.append(sql+";")
 
         if self.implementation :
+            self.create_database()
             self.cursor.execute(sql)
 
 

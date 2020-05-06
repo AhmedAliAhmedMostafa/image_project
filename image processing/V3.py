@@ -3,11 +3,6 @@ import cv2
 import math
 from Data_structure import Entity as Shapes
 
-Entities = []
-Relations = []
-Attributes = []
-Lines = []
-
 
 # Function to Fill hole by White Mask
 def fillHole(im_in):
@@ -31,7 +26,7 @@ def fillHole(im_in):
 
 
 # Detect Lines by Hough Transform
-def GetLinesByTransform(onlylineIMG, Origimg):
+def GetLinesByTransform(onlylineIMG, Origimg, Lines):
     lines = cv2.HoughLinesP(onlylineIMG, 1, np.pi / 180, 38, None, minLineLength=0, maxLineGap=10)
     print(len(lines))
 
@@ -49,11 +44,11 @@ def GetLinesByTransform(onlylineIMG, Origimg):
         cv2.line(Origimg, (xL, yL), (x2, y2), (255, 0, 255), 2)
         cv2.putText(Origimg, "line", (int(xL), int(yL)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0))
 
-    return Origimg
+    return Origimg, Lines
 
 
 # Detect Lines by Contours
-def GetLinesByContours(onlyline1, Oimg):
+def GetLinesByContours(onlyline1, Oimg, Lines):
     # Making these 2 Operations to remove noise
     onlyline1 = cv2.medianBlur(onlyline1, 3)
     onlyline1 = cv2.morphologyEx(onlyline1, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)))
@@ -100,11 +95,11 @@ def GetLinesByContours(onlyline1, Oimg):
             cv2.putText(Oimg, "endL", (int(x2), int(y2)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 255, 255))
 
     # print("linesN", linesNumber)
-    return Oimg
+    return Oimg, Lines
 
 
 # Detect Shapes by Contours = Entity or Relation or Attribute
-def GetShapes(openingIMG, Orimg):
+def GetShapes(openingIMG, Orimg, Entities, Relations, Attributes):
     contours, _ = cv2.findContours(openingIMG, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     numberofent = 0
@@ -134,9 +129,9 @@ def GetShapes(openingIMG, Orimg):
                 cY = int(M["m01"] / M["m00"])
                 CeP = Shapes.point(cX, cY)
 
-                # Make an Relation Object and store it into Relations List
-                rel = Shapes.relation("Rel" + str(numberofrel), -1, -1, "undefined", "undefined", "undefined",
-                                      "undefined", CeP)
+                # Initialize an Relation Object and store it into Relations List with default values
+                rel = Shapes.relation("Rel" + str(numberofrel), -1, -1, "1", "1", "full",
+                                      "full", CeP)
                 Relations.append(rel)
 
                 # Draw the Relation Shape
@@ -177,8 +172,8 @@ def GetShapes(openingIMG, Orimg):
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
             CeP1 = Shapes.point(cX, cY)
-            # Initialize a Relation object to store it into Relations List
-            rel = Shapes.relation("Rel" + str(numberofrel), -1, -1, "undefined", "undefined", "undefined", "undefined",
+            # Initialize a Relation object to store it into Relations List with default values
+            rel = Shapes.relation("Rel" + str(numberofrel), -1, -1, "1", "1", "full", "full",
                                   CeP1)
             Relations.append(rel)
 
@@ -197,7 +192,7 @@ def GetShapes(openingIMG, Orimg):
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
             CirCentP = Shapes.point(cX, cY)
-            # Initialize attribute object to store it into Attributes List
+            # Initialize attribute object to store it into Attributes List with default values
             att = Shapes.attribute("Att" + str(numberofatt), "undefined", CirCentP)
             Attributes.append(att)
 
@@ -207,12 +202,12 @@ def GetShapes(openingIMG, Orimg):
             cv2.putText(Orimg, "Att" + str(numberofatt), (x, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0))
             cv2.drawContours(Orimg, [approx], 0, (255, 0, 0), 2)
 
-    return Orimg
+    return Orimg, Entities, Relations, Attributes
 
 
 # The size of masks with trial and check
 # Draw the Shapes
-def drawShapes(Originalimg):
+def drawShapes(Originalimg, Entities, Relations, Attributes, Lines):
     imgGrey = cv2.cvtColor(Originalimg, cv2.COLOR_BGR2GRAY)
     # Denoise = cv2.medianBlur(imgGrey, 3)
     # cv2.imshow("imgGrey", Denoise)
@@ -249,13 +244,13 @@ def drawShapes(Originalimg):
     # edges = cv2.Canny(onlyline2, 150, 400, None, 3)
     # cv2.imshow("edges", edges)
 
-    imgLine = GetLinesByContours(onlyline1, Originalimg)
+    imgLine, Lines = GetLinesByContours(onlyline1, Originalimg, Lines)
     cv2.imshow("DrawOnlyLine", imgLine)
 
-    shapesImage = GetShapes(opening1, Originalimg)
+    shapesImage, Entities, Relations, Attributes = GetShapes(opening1, Originalimg, Entities, Relations, Attributes)
     cv2.imshow("shapesImage", shapesImage)
 
-    return Originalimg
+    return Originalimg, Entities, Relations, Attributes, Lines
 
 
 # Calculate Distance between two points
@@ -264,7 +259,7 @@ def CalcDistance(Point1, Point2):
 
 
 # Check which shapes are connected to the start point and end point of one line
-def ConnectedSh(line, Ents, Attrs, Rels):
+def ConnectedSh(line, Ents, Rels, Attrs):
     startPointofLine = line.StartPoint
     endPointofLine = line.EndPoint
     # Assume that the input line is connected to first entity
@@ -313,7 +308,7 @@ def ConnectedSh(line, Ents, Attrs, Rels):
     # Return a list has the connected shape to start of the line,
     # and the connected shape to end of the line
     connectedshape = [connectedtostart, connectedtoend]
-    return connectedshape
+    return connectedshape, Ents, Rels, Attrs
 
 
 # Making the list contains only unique items
@@ -348,7 +343,8 @@ def Merge(lines, Ents, Attrs, Rels):
     connectedshapes = []
     # Check which shapes are connected to the start point and end point of all lines
     for i in range(0, len(lines)):
-        connectedshapes.append(ConnectedSh(lines[i], Ents, Attrs, Rels))
+        ConShapes, Ents, Rels, Attrs = ConnectedSh(lines[i], Ents, Rels, Attrs)
+        connectedshapes.append(ConShapes)
 
     # Make it contains unique items as we mentioned above
     Uniqconnectedshapes = unique(connectedshapes)
@@ -362,37 +358,37 @@ def Merge(lines, Ents, Attrs, Rels):
 
             # if This Relation id is still -1, means that the relation is not merged to any entity before
             # int(stri2[len(stri2)-1:]) - 1 == It is the index of the certain shape
-            if Relations[int(stri2[len(stri2)-1:]) - 1].id1 == -1:
+            if Rels[int(stri2[len(stri2)-1:]) - 1].id1 == -1:
                 # Get the entity id to assign it to the relation
-                id1 = Entities[int(stri1[len(stri1)-1:])].getID()
-                Relations[int(stri2[len(stri2)-1:]) - 1].id1 = id1
+                id1 = Ents[int(stri1[len(stri1)-1:])].getID()
+                Rels[int(stri2[len(stri2)-1:]) - 1].id1 = id1
                 # Add the Relation to the entity relation list
-                Entities[int(stri1[len(stri1) - 1:])].add_relation(Relations[int(stri2[len(stri2)-1:]) - 1])
+                Ents[int(stri1[len(stri1) - 1:])].add_relation(Rels[int(stri2[len(stri2)-1:]) - 1])
             # it means that there is an entity merged to this relation, and this entity will be the second one
-            elif Relations[int(stri2[len(stri2) - 1:]) - 1].id2 == -1:
+            elif Rels[int(stri2[len(stri2) - 1:]) - 1].id2 == -1:
                 # Get the entity id to assign it to the relation
-                id2 = Entities[int(stri1[len(stri1)-1:])].getID()
-                Relations[int(stri2[len(stri2)-1:]) - 1].id2 = id2
+                id2 = Ents[int(stri1[len(stri1)-1:])].getID()
+                Rels[int(stri2[len(stri2)-1:]) - 1].id2 = id2
                 # Add the Relation to the entity relation list
-                Entities[int(stri1[len(stri1) - 1:])].add_relation(Relations[int(stri2[len(stri2)-1:]) - 1])
+                Ents[int(stri1[len(stri1) - 1:])].add_relation(Rels[int(stri2[len(stri2)-1:]) - 1])
                 # now, we ensured that there are two entity connected or merged to the relation,
                 # so we will assign the relation ID by XORing the two entities ids.
-                Relations[int(stri2[len(stri2) - 1:]) - 1].id = Relations[int(stri2[len(stri2)-1:]) - 1].id1 ^ id2
+                Rels[int(stri2[len(stri2) - 1:]) - 1].id = Rels[int(stri2[len(stri2)-1:]) - 1].id1 ^ id2
 
         # Same explanation as above
         elif "Rel" in Uniqconnectedshapes[i][0] and "Ent" in Uniqconnectedshapes[i][1]:
             stri1 = Uniqconnectedshapes[i][1]
             stri2 = Uniqconnectedshapes[i][0]
             index = stri2[len(stri2)-1:]
-            if Relations[int(index) - 1].id1 == -1:
-                id1 = Entities[int(stri1[len(stri1) - 1:])].getID()
-                Relations[int(stri2[len(stri2)-1:]) - 1].id1 = id1
-                Entities[int(stri1[len(stri1) - 1:])].add_relation(Relations[int(stri2[len(stri2) - 1:]) - 1])
-            elif Relations[int(stri2[len(stri2) - 1:]) - 1].id2 == -1:
-                id2 = Entities[int(stri1[len(stri1) - 1:])].getID()
-                Relations[int(stri2[len(stri2) - 1:]) - 1].id2 = id2
-                Entities[int(stri1[len(stri1) - 1:])].add_relation(Relations[int(stri2[len(stri2) - 1:]) - 1])
-                Relations[int(stri2[len(stri2) - 1:]) - 1].id = Relations[int(stri2[len(stri2)-1:]) - 1].id1 ^ id2
+            if Rels[int(index) - 1].id1 == -1:
+                id1 = Ents[int(stri1[len(stri1) - 1:])].getID()
+                Rels[int(stri2[len(stri2)-1:]) - 1].id1 = id1
+                Ents[int(stri1[len(stri1) - 1:])].add_relation(Rels[int(stri2[len(stri2) - 1:]) - 1])
+            elif Rels[int(stri2[len(stri2) - 1:]) - 1].id2 == -1:
+                id2 = Ents[int(stri1[len(stri1) - 1:])].getID()
+                Rels[int(stri2[len(stri2) - 1:]) - 1].id2 = id2
+                Ents[int(stri1[len(stri1) - 1:])].add_relation(Rels[int(stri2[len(stri2) - 1:]) - 1])
+                Rels[int(stri2[len(stri2) - 1:]) - 1].id = Rels[int(stri2[len(stri2)-1:]) - 1].id1 ^ id2
 
         # ==============================================================================================================
 
@@ -402,14 +398,14 @@ def Merge(lines, Ents, Attrs, Rels):
         elif "Ent" in Uniqconnectedshapes[i][0] and "Att" in Uniqconnectedshapes[i][1]:
             stri1 = Uniqconnectedshapes[i][0]
             stri2 = Uniqconnectedshapes[i][1]
-            Entities[int(stri1[len(stri1)-1:])].add_attr(Attributes[int(stri2[len(stri2)-1:]) - 1])
-            Attributes[int(stri2[len(stri2) - 1:]) - 1].isParent = True
+            Ents[int(stri1[len(stri1)-1:])].add_attr(Attrs[int(stri2[len(stri2)-1:]) - 1])
+            Attrs[int(stri2[len(stri2) - 1:]) - 1].isParent = True
 
         elif "Att" in Uniqconnectedshapes[i][0] and "Ent" in Uniqconnectedshapes[i][1]:
             stri2 = Uniqconnectedshapes[i][0]
             stri1 = Uniqconnectedshapes[i][1]
-            Entities[int(stri1[len(stri1)-1:])].add_attr(Attributes[int(stri2[len(stri2)-1:]) - 1])
-            Attributes[int(stri2[len(stri2) - 1:]) - 1].isParent = True
+            Ents[int(stri1[len(stri1)-1:])].add_attr(Attrs[int(stri2[len(stri2)-1:]) - 1])
+            Attrs[int(stri2[len(stri2) - 1:]) - 1].isParent = True
 
         # ==============================================================================================================
 
@@ -419,41 +415,79 @@ def Merge(lines, Ents, Attrs, Rels):
         elif "Att" in Uniqconnectedshapes[i][0] and "Rel" in Uniqconnectedshapes[i][1]:
             stri1 = Uniqconnectedshapes[i][0]
             stri2 = Uniqconnectedshapes[i][1]
-            Relations[int(stri2[len(stri2)-1:]) - 1].add_attrib(Attributes[int(stri1[len(stri1)-1:]) - 1])
-            Attributes[int(stri1[len(stri1) - 1:]) - 1].isParent = True
+            Rels[int(stri2[len(stri2)-1:]) - 1].add_attrib(Attrs[int(stri1[len(stri1)-1:]) - 1])
+            Attrs[int(stri1[len(stri1) - 1:]) - 1].isParent = True
+            Attrs[int(stri1[len(stri1) - 1:]) - 1].type = "Non-prime"
 
         elif "Rel" in Uniqconnectedshapes[i][0] and "Att" in Uniqconnectedshapes[i][1]:
             stri2 = Uniqconnectedshapes[i][0]
             stri1 = Uniqconnectedshapes[i][1]
-            Relations[int(stri2[len(stri2)-1:]) - 1].add_attrib(Attributes[int(stri1[len(stri1)-1:]) - 1])
-            Attributes[int(stri1[len(stri1) - 1:]) - 1].isParent = True
+            Rels[int(stri2[len(stri2)-1:]) - 1].add_attrib(Attrs[int(stri1[len(stri1)-1:]) - 1])
+            Attrs[int(stri1[len(stri1) - 1:]) - 1].isParent = True
+            Attrs[int(stri1[len(stri1) - 1:]) - 1].type = "Non-prime"
 
         # ==============================================================================================================
+
+    # initialize the attributes of each entity
+    # First Attribute of each entity with "Prime", others are "Non-Prime"
+    for i in range(0, len(Ents)):
+        Ents[i].attr_list[0].type = "Prime"
+        for j in range(1, len(Ents[i].attr_list)):
+            Ents[i].attr_list[j].type = "Non-prime"
 
     # Merge Composite Attribute
     # Check which one of them is the parent = composite to:
     # 1- make the another attribute a child
     # 2- add the child one to Parent attribute children list
+    # 3- initialize the prime \ non-prime attributes
     for i in range(0, len(Uniqconnectedshapes)):
         if "Att" in Uniqconnectedshapes[i][0] and "Att" in Uniqconnectedshapes[i][1]:
             stri1 = Uniqconnectedshapes[i][0]
             stri2 = Uniqconnectedshapes[i][1]
-            if Attributes[int(stri1[len(stri1) - 1:]) - 1].isParent:
-                Attributes[int(stri1[len(stri1) - 1:]) - 1].isComposite = True
-                Attributes[int(stri1[len(stri1) - 1:]) - 1].add_child(Attributes[int(stri2[len(stri2) - 1:]) - 1])
-            elif Attributes[int(stri2[len(stri2) - 1:]) - 1].isParent:
-                Attributes[int(stri2[len(stri2) - 1:]) - 1].isComposite = True
-                Attributes[int(stri2[len(stri2) - 1:]) - 1].add_child(Attributes[int(stri1[len(stri1) - 1:]) - 1])
+            if Attrs[int(stri1[len(stri1) - 1:]) - 1].isParent and \
+                    Attrs[int(stri1[len(stri1) - 1:]) - 1].type == "Prime":
+                Attrs[int(stri1[len(stri1) - 1:]) - 1].isComposite = True
+                Attrs[int(stri1[len(stri1) - 1:]) - 1].add_child(Attrs[int(stri2[len(stri2) - 1:]) - 1])
+                Attrs[int(stri2[len(stri2) - 1:]) - 1].type = "Prime"
+            elif Attrs[int(stri1[len(stri1) - 1:]) - 1].isParent and \
+                    Attrs[int(stri1[len(stri1) - 1:]) - 1].type == "Non-prime":
+                Attrs[int(stri1[len(stri1) - 1:]) - 1].isComposite = True
+                Attrs[int(stri1[len(stri1) - 1:]) - 1].add_child(Attrs[int(stri2[len(stri2) - 1:]) - 1])
+                Attrs[int(stri2[len(stri2) - 1:]) - 1].type = "Non-prime"
 
-    return Uniqconnectedshapes
+            elif Attrs[int(stri2[len(stri2) - 1:]) - 1].isParent and \
+                    Attrs[int(stri2[len(stri2) - 1:]) - 1].type == "Prime":
+                Attrs[int(stri2[len(stri2) - 1:]) - 1].isComposite = True
+                Attrs[int(stri2[len(stri2) - 1:]) - 1].add_child(Attrs[int(stri1[len(stri1) - 1:]) - 1])
+                Attrs[int(stri1[len(stri1) - 1:]) - 1].type = "Prime"
+            elif Attrs[int(stri2[len(stri2) - 1:]) - 1].isParent and \
+                    Attrs[int(stri2[len(stri2) - 1:]) - 1].type == "Non-prime":
+                Attrs[int(stri2[len(stri2) - 1:]) - 1].isComposite = True
+                Attrs[int(stri2[len(stri2) - 1:]) - 1].add_child(Attrs[int(stri1[len(stri1) - 1:]) - 1])
+                Attrs[int(stri1[len(stri1) - 1:]) - 1].type = "Non-prime"
+
+    # ==================================================================================================================
+
+    return Uniqconnectedshapes, Ents, Rels, Attrs
+
+
+def ERD_Project(Original):
+    Entities = []
+    Relations = []
+    Attributes = []
+    Lines = []
+
+    cv2.imshow("img", Original)
+    Test1, Entities, Relations, Attributes, Lines = drawShapes(Original, Entities, Relations, Attributes, Lines)
+    Test2, Entities, Relations, Attributes = Merge(Lines, Entities, Attributes, Relations)
+    print("Smile", Test2)
+    FinalEntitiesList = Entities
+
+    return FinalEntitiesList
 
 
 img = cv2.imread('\ASU\Senior\Flowchart10.png')
-cv2.imshow("img", img)
-Test = drawShapes(img)
-Test2 = Merge(Lines, Entities, Attributes, Relations)
-
-print("Smile", Test2)
+Final_Entities_List = ERD_Project(img)
 
 
 # Exiting the window if 'q' is pressed on the keyboard.

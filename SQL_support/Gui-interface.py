@@ -14,7 +14,7 @@ import Entity as En
 # import Data_structure.Entity as En
 __all__=["Entity"]
 
-def create_SQL(gui_list_of_entities,path=None,implementation=False):
+def create_SQL(gui_list_of_entities,host,user,passwd,path=None,implementation=False):
     '''
     @description: takes list of entites as in Entity.py and creates connection with mysql db making
                   queires derived from entity objects [intended to be triggered by a button from GUI]
@@ -22,8 +22,8 @@ def create_SQL(gui_list_of_entities,path=None,implementation=False):
     @input      : list of entites
     @output     : None or Error(if supported error reporting)
     '''
-    db = db_interpreter(impl=implementation)
-    db.create_database()
+    db = db_interpreter(impl=implementation,host=host,user=user,passwd=passwd)
+
     for entity in gui_list_of_entities:
         db.create_table(entity)
 
@@ -78,7 +78,7 @@ def main():# [FOR TESTING ONLY]
 
     entities=[EmployeeEntity,departmentEntity]
 
-    create_SQL(entities,implementation=True)
+    create_SQL(entities,host="localhost",user="root",passwd="metro22")
 
 if __name__ == "__main__":
     main()

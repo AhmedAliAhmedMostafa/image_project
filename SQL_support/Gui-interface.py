@@ -78,7 +78,7 @@ def main():# [FOR TESTING ONLY]
 
     entities=[EmployeeEntity,departmentEntity]
 
-    create_SQL(entities,host="localhost",user="root",passwd="metro22",implementation=True)
+    create_SQL(entities,host="localhost",user="root",passwd="metro22")
 
 if __name__ == "__main__":
     main()

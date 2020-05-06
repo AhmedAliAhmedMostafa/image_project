@@ -3,9 +3,10 @@ import MySQLdb
 
 class db_interpreter:
     def __init__(self,impl,host="localhost",user="root",passwd="metro22"):
-       self.db1 = MySQLdb.connect(host,user,passwd)
        self.implementation = impl
-       self.cursor = self.db1.cursor()
+       if impl:
+           self.db1 = MySQLdb.connect(host,user,passwd)
+           self.cursor = self.db1.cursor()
        self.doneRelations = []
        self.queries = []
 
@@ -143,6 +144,7 @@ class db_interpreter:
         return fk_name
 
     def __del__(self):
-        self.db1.commit()
-        self.db1.close()
-        print("connection with db is closed")
+        if self.implementation:
+            self.db1.commit()
+            self.db1.close()
+            print("connection with db is closed")

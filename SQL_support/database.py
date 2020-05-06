@@ -3,35 +3,39 @@ import MySQLdb
 
 class db_interpreter:
     def __init__(self,impl,host="localhost",user="root",passwd="metro22"):
-       self.db1 = MySQLdb.connect(host,user,passwd)
        self.implementation = impl
-       self.cursor = self.db1.cursor()
+       if impl:
+           self.db1 = MySQLdb.connect(host,user,passwd)
+           self.cursor = self.db1.cursor()
        self.doneRelations = []
        self.queries = []
 
     def create_database(self,dbName="test_image"):
-        sql = 'CREATE DATABASE IF NOT EXISTS'+dbName
+        sql = """CREATE DATABASE IF NOT EXISTS """+dbName
         self.queries.append(sql+";")
+        self.queries.append("USE "+dbName+" ;")
         if self.implementation :
             self.cursor.execute(sql)
+            self.cursor.execute("USE "+dbName)
 
     def create_table(self, entity):
-        sql = "CREATE TABLE "+entity.name+" ("
+        sql = """CREATE TABLE """+entity.name+""" ("""
 
         for attrib in entity.attr_list:
             if attrib.isComposite == True:
                 for child_attrib in attrib.attrib_childs:
-                    sql += " "+child_attrib.name + " CHAR(40) ,"
+                    sql += """ """+child_attrib.name + """ CHAR(40) ,"""
             else:
                 if attrib.type == "prime" or attrib.type == "primary":
-                    sql += " "+attrib.name + " INT(20) PRIMARY KEY AUTO_INCREMENT,"
+                    sql += """ """+attrib.name + """ INT(20) PRIMARY KEY AUTO_INCREMENT,"""
                 else:
-                    sql += " "+attrib.name + " CHAR(40) ,"
+                    sql += """ """+attrib.name + """ CHAR(40) ,"""
 
         if sql[-1] !=")": 
             if sql[-1]==",":
-                sql2 = sql[:-1]+")"
+                sql2 = sql[:-1]+""")"""
                 self.queries.append(sql2+";")
+                sql = sql2
             else:
                 sql += ")"
                 self.queries.append(sql+";")
@@ -39,6 +43,7 @@ class db_interpreter:
             self.queries.append(sql+";")
 
         if self.implementation :
+            self.create_database()
             self.cursor.execute(sql)
 
 
@@ -125,7 +130,7 @@ class db_interpreter:
     def __addForignKey(self,parameter_list):        #  adds a fk in tableB that refrences the pk in tableA
         fk_name = parameter_list[0].getPrim_attrib().name
         sql = "ALTER TABLE "+parameter_list[2].name +\
-              " ADD "+ fk_name+"_fk" + " SMALLINT UNSIGNED NOT NULL DEFAULT 0"
+              " ADD "+ fk_name+"_fk" + " INT NOT NULL DEFAULT 0"
 
         sql2 = "ALTER TABLE "+parameter_list[2].name +" ADD CONSTRAINT fk_"+fk_name+\
                " FOREIGN KEY (" + fk_name+"_fk" + ") REFERENCES "+parameter_list[0].name+"("+fk_name+")"
@@ -139,6 +144,7 @@ class db_interpreter:
         return fk_name
 
     def __del__(self):
-        self.db1.commit()
-        self.db1.close()
-        print("connection with db is closed")
+        if self.implementation:
+            self.db1.commit()
+            self.db1.close()
+            print("connection with db is closed")

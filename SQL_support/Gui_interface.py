@@ -1,5 +1,5 @@
 # from SQL_support.database import db_interpreter
-from database import db_interpreter
+from SQL_support.database import db_interpreter
 
 def path_resolve():
     ExecutionPath = importPath = os.getcwd()

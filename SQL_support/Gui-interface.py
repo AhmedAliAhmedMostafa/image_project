@@ -14,7 +14,7 @@ import Entity as En
 # import Data_structure.Entity as En
 __all__=["Entity"]
 
-def create_SQL(gui_list_of_entities,implementation=False):
+def create_SQL(gui_list_of_entities,path=None,implementation=False):
     '''
     @description: takes list of entites as in Entity.py and creates connection with mysql db making
                   queires derived from entity objects [intended to be triggered by a button from GUI]
@@ -23,6 +23,7 @@ def create_SQL(gui_list_of_entities,implementation=False):
     @output     : None or Error(if supported error reporting)
     '''
     db = db_interpreter(impl=implementation)
+    db.create_database()
     for entity in gui_list_of_entities:
         db.create_table(entity)
 
@@ -31,17 +32,20 @@ def create_SQL(gui_list_of_entities,implementation=False):
             traget_entity = getEntityByID(gui_list_of_entities,rel.getTargetEntity(entity))
             db.create_relation([entity,rel,traget_entity])
 
-    
-    exportQuery(db.queries)
+    if not implementation:
+        exportQuery(db.queries,path)
     
 def getEntityByID(entity_list,id):
     for entity in entity_list:
         if entity.id == id :
             return entity
 
-def exportQuery(queries,option="txt"):
+def exportQuery(queries,path=None,option="txt"):
     if option == "txt":
-        text_file = open("Queries.txt", "w")
+        if path == None:
+            text_file = open("Queries.txt", "w")
+        else:
+            text_file = open(path+"Queries.txt", "w")
         for query in queries:
             text_file.write(query+"\n")
         text_file.close()
@@ -74,20 +78,7 @@ def main():# [FOR TESTING ONLY]
 
     entities=[EmployeeEntity,departmentEntity]
 
-    create_SQL(entities)
+    create_SQL(entities,implementation=True)
 
-    # db = MySQLdb.connect( "localhost" ,"root" , "metro22" ,"test_image")
-    # # prepare a cursor object using cursor() method
-    # cursor = db.cursor()
-
-    # # execute SQL query using execute() method.
-    # cursor.execute("SELECT VERSION()")
-
-    # # Fetch a single row using fetchone() method.
-    # data = cursor.fetchone()
-    # print ("Database version : %s " % data)
-
-    # # disconnect from server
-    # db.close()
 if __name__ == "__main__":
     main()

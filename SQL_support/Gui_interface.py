@@ -10,7 +10,7 @@ def path_resolve():
 import sys,os
 path_resolve()
 
-import Entity as En
+from Data_structure import Entity as En
 # import Data_structure.Entity as En
 __all__=["Entity"]
 

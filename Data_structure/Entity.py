@@ -29,7 +29,7 @@ class entity:
 
     def getPrim_attrib(self):
         for attrib in self.attr_list:
-            if attrib.type == "primary" or attrib.type == "prime":
+            if attrib.type == "primary" or attrib.type == "prime"or attrib.type == "Prime":
                 return attrib
 
 

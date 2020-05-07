@@ -26,7 +26,7 @@ class db_interpreter:
                 for child_attrib in attrib.attrib_childs:
                     sql += """ """+child_attrib.name + """ CHAR(40) ,"""
             else:
-                if attrib.type == "prime" or attrib.type == "primary":
+                if attrib.type == "prime" or attrib.type == "primary"or attrib.type == "Prime":
                     sql += """ """+attrib.name + """ INT(20) PRIMARY KEY AUTO_INCREMENT,"""
                 else:
                     sql += """ """+attrib.name + """ CHAR(40) ,"""

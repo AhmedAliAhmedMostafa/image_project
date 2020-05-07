@@ -95,7 +95,7 @@ class db_interpreter:
     def __MakeOneToOne(self, parameter_list):
         res = self.__addForignKey(parameter_list)
         sql = "ALTER TABLE "+parameter_list[2].name +\
-              " ADD CONSTRAINT "+parameter_list[2].name+"_unique"+" UNIQUE ("+res+")"
+              " ADD CONSTRAINT "+parameter_list[2].name+"_unique"+" UNIQUE ("+res+"_fk"+")"
         self.queries.append(sql+";")
         if self.implementation :
             self.cursor.execute(sql)

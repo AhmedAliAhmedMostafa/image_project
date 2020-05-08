@@ -43,7 +43,7 @@ class db_interpreter:
             self.queries.append(sql+";")
 
         if self.implementation :
-            self.create_database()
+            # self.create_database()
             self.cursor.execute(sql)
 
 
@@ -109,8 +109,8 @@ class db_interpreter:
 
     def __MakeManyToMany(self, parameter_list):
         table_name = parameter_list[1].name
-        PK_tableA = parameter_list[0].getprim_attrib().name
-        PK_tableB = parameter_list[2].getprim_attrib().name
+        PK_tableA = parameter_list[0].getPrim_attrib().name
+        PK_tableB = parameter_list[2].getPrim_attrib().name
 
         sql = "CREATE TABLE " + table_name +"("+\
                PK_tableA + "INT NOT NULL DEFAULT 0 ,"+\

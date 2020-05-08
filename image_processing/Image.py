@@ -213,19 +213,19 @@ def drawShapes(Originalimg, Entities, Relations, Attributes, Lines):
     # cv2.imshow("imgGrey", Denoise)
 
     _, thresh = cv2.threshold(imgGrey, 100, 255, cv2.THRESH_BINARY)
-    cv2.imshow("Thresh", thresh)
+    # cv2.imshow("Thresh", thresh)
 
     binaryconverted = (255 - thresh)
-    cv2.imshow("binaryconverted", binaryconverted)
+    # cv2.imshow("binaryconverted", binaryconverted)
 
     binaryconverted1 = fillHole(binaryconverted)
-    cv2.imshow("binaryconverted1", binaryconverted1)
+    # cv2.imshow("binaryconverted1", binaryconverted1)
 
     # These operations to make the shapes are sharps so we can detect it effectively
     binaryconverted1 = cv2.erode(binaryconverted1, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)))
     opening = cv2.morphologyEx(binaryconverted1, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10)))
     opening1 = cv2.medianBlur(opening, 3)
-    cv2.imshow("opening1", opening1)
+    # cv2.imshow("opening1", opening1)
 
     # opening2 = cv2.dilate(opening, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)))
     # cv2.imshow("opening2", opening2)
@@ -236,7 +236,7 @@ def drawShapes(Originalimg, Entities, Relations, Attributes, Lines):
     onlyline1 = binaryconverted1 - opening1
     onlyline1 = cv2.medianBlur(onlyline1, 3)
     onlyline1 = cv2.erode(onlyline1, cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1)))
-    cv2.imshow("onlyline1", onlyline1)
+    # cv2.imshow("onlyline1", onlyline1)
 
     # onlyline2 = binaryconverted1 - opening2
     # cv2.imshow("onlyline2", onlyline2)
@@ -245,10 +245,10 @@ def drawShapes(Originalimg, Entities, Relations, Attributes, Lines):
     # cv2.imshow("edges", edges)
 
     imgLine, Lines = GetLinesByContours(onlyline1, Originalimg, Lines)
-    cv2.imshow("DrawOnlyLine", imgLine)
+    # cv2.imshow("DrawOnlyLine", imgLine)
 
     shapesImage, Entities, Relations, Attributes = GetShapes(opening1, Originalimg, Entities, Relations, Attributes)
-    cv2.imshow("shapesImage", shapesImage)
+    # cv2.imshow("shapesImage", shapesImage)
 
     return Originalimg, Entities, Relations, Attributes, Lines
 
@@ -486,8 +486,6 @@ def ERD_Project(Original):
     return FinalEntitiesList
 
 
-img = cv2.imread('\ASU\Senior\Flowchart10.png')
-Final_Entities_List = ERD_Project(img)
 
 
 # Exiting the window if 'q' is pressed on the keyboard.

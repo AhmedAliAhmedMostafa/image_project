@@ -12,4 +12,4 @@ For Debian based distributions (Ubuntu,Parsix,.......)
      ``` 
      dpkg -i (path)
      ``` 
-     ### NOTE:replace parenthesis with the actual path where you saved .deb file
+     ### NOTE:replace parenthesis with the actual path where you saved .deb file,and you might need to use sudo at the begining of the command
